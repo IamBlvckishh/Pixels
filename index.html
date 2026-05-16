@@ -1,0 +1,2434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixels Studio</title>
+    <style>
+      :root {
+        --bg-color: #ffffff;
+        --text-color: #000000;
+        --border-color: #e5e5e5;
+        --panel-bg: #f9f9f9;
+        --accent-color: #ff0055;
+        --muted-text: #8c8c8c;
+        --canvas-bg: #f0f0f0;
+      }
+
+      /* Alternate Themes */
+      body.theme-dark {
+        --bg-color: #0a0a0a;
+        --text-color: #ffffff;
+        --border-color: #262626;
+        --panel-bg: #121212;
+        --accent-color: #ff0055;
+        --muted-text: #666666;
+        --canvas-bg: #050505;
+      }
+
+      body.theme-cyberpunk {
+        --bg-color: #1a0033;
+        --text-color: #00ffff;
+        --border-color: #ff00aa;
+        --panel-bg: #0d001a;
+        --accent-color: #ffff00;
+        --muted-text: #8800ff;
+        --canvas-bg: #05000a;
+      }
+
+      body.theme-matrix {
+        --bg-color: #000c00;
+        --text-color: #00ff00;
+        --border-color: #003300;
+        --panel-bg: #000500;
+        --accent-color: #33ff33;
+        --muted-text: #005500;
+        --canvas-bg: #000200;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        letter-spacing: -0.01em;
+        transition: background-color 0.2s ease, color 0.2s ease;
+      }
+
+      header {
+        height: 70px;
+        padding: 0 32px;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--panel-bg);
+        flex-shrink: 0;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .studio-title {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .collection-status {
+        font-size: 11px;
+        font-weight: 600;
+        font-family: monospace;
+        color: var(--accent-color);
+        letter-spacing: 0.1em;
+        background: rgba(255, 0, 85, 0.08);
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        justify-self: center;
+      }
+
+      .header-right {
+        justify-self: end;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      button,
+      select,
+      .text-field-input {
+        background: var(--bg-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .text-field-input {
+        cursor: text;
+        outline: none;
+      }
+
+      .text-field-input:focus {
+        border-color: var(--muted-text);
+      }
+
+      button:hover {
+        background: var(--text-color);
+        color: var(--bg-color);
+        border-color: var(--text-color);
+      }
+
+      select {
+        width: 100%;
+        background: var(--panel-bg);
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg fill='gray' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 40px;
+      }
+
+      select option {
+        background: var(--panel-bg);
+        color: var(--text-color);
+      }
+
+      button:disabled {
+        opacity: 0.2;
+        cursor: not-allowed;
+      }
+
+      button:disabled:hover {
+        background: var(--bg-color);
+        color: var(--text-color);
+        border-color: var(--border-color);
+      }
+
+      .studio-layout {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        height: calc(100vh - 70px);
+        overflow: hidden;
+      }
+
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+        height: 100%;
+        overflow-y: auto;
+        background: var(--panel-bg);
+        border-right: 1px solid var(--border-color);
+      }
+
+      .canvas-area {
+        background: var(--canvas-bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        overflow: hidden;
+        position: relative;
+        border-right: 1px solid var(--border-color);
+        padding: 20px;
+      }
+
+      .explorer-panel {
+        border-right: none;
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 16px;
+        overflow: hidden;
+        padding: 20px;
+      }
+
+      .explorer-sub-section {
+        display: flex;
+        flex-direction: column;
+        background: rgba(0, 0, 0, 0.01);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 14px;
+        overflow: hidden;
+      }
+
+      body.theme-dark .explorer-sub-section,
+      body.theme-cyberpunk .explorer-sub-section,
+      body.theme-matrix .explorer-sub-section {
+        background: rgba(255, 255, 255, 0.01);
+      }
+
+      .explorer-scrollable {
+        flex: 1;
+        overflow-y: auto;
+        margin-top: 8px;
+      }
+
+      .section-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted-text);
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .trait-group {
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        border-radius: 8px;
+        background: var(--bg-color);
+      }
+
+      .grid-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+      }
+
+      .palette-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+      }
+
+      .color-swatch {
+        aspect-ratio: 1/1;
+        border: 2px solid transparent;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+      }
+
+      .color-swatch:hover {
+        transform: scale(1.05);
+      }
+
+      .color-swatch.active {
+        border-color: var(--text-color);
+        transform: scale(0.95);
+      }
+
+      .pixel-container {
+        width: 100%;
+        max-width: 380px;
+        aspect-ratio: 1/1;
+        border: 1px solid var(--border-color);
+        background: var(--bg-color);
+        display: grid;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.05);
+      }
+
+      body.theme-dark .pixel-container,
+      body.theme-cyberpunk .pixel-container,
+      body.theme-matrix .pixel-container {
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8);
+      }
+
+      .pixel-cell {
+        border: 0.5px solid rgba(0, 0, 0, 0.03);
+        cursor: crosshair;
+        aspect-ratio: 1/1;
+      }
+
+      body.theme-dark .pixel-cell,
+      body.theme-cyberpunk .pixel-cell,
+      body.theme-matrix .pixel-cell {
+        border-color: rgba(255, 255, 255, 0.02);
+      }
+
+      .history-controls {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+        max-width: 380px;
+        justify-content: center;
+      }
+
+      .history-controls button {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px;
+        background: var(--bg-color);
+      }
+
+      .input-box,
+      .source-box {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        padding: 12px;
+        font-size: 11px;
+        border-radius: 8px;
+        color: var(--text-color);
+        font-family: monospace;
+        word-break: break-all;
+      }
+
+      .input-box {
+        width: 100%;
+        height: 80px;
+        resize: none;
+        outline: none;
+      }
+
+      .input-box:focus {
+        border-color: var(--muted-text);
+      }
+
+      .source-box {
+        flex: 1;
+        overflow-y: auto;
+        user-select: all;
+        min-height: 120px;
+      }
+
+      .action-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .btn-mint {
+        background: var(--text-color);
+        color: var(--bg-color);
+        font-weight: 600;
+        padding: 12px;
+        font-size: 12px;
+        border: none;
+        border-radius: 6px;
+      }
+
+      .btn-mint:hover {
+        background: var(--accent-color);
+        color: #ffffff;
+      }
+
+      .btn-mint:disabled {
+        background: var(--panel-bg);
+        color: var(--muted-text);
+        border: 1px solid var(--border-color);
+      }
+
+      .tx-status {
+        padding: 12px;
+        border: 1px solid rgba(255, 0, 85, 0.3);
+        background: rgba(255, 0, 85, 0.05);
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .tx-status a {
+        color: var(--accent-color);
+        font-size: 11px;
+        font-family: monospace;
+        text-decoration: none;
+        display: block;
+        margin-top: 4px;
+      }
+
+      .tx-status a:hover {
+        text-decoration: underline;
+      }
+
+      /* Integrated Viewer Component Styles */
+      .viewer-search-bar {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .viewer-input {
+        flex: 1;
+        background: var(--bg-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        padding: 8px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 11px;
+        outline: none;
+      }
+      .viewer-card-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .viewer-card {
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        cursor: pointer;
+        transition: border-color 0.2s ease;
+      }
+      .viewer-card:hover {
+        border-color: var(--accent-color);
+      }
+      .viewer-card-summary {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        width: 100%;
+      }
+      .viewer-img-frame {
+        width: 60px;
+        height: 60px;
+        background: var(--canvas-bg);
+        border-radius: 4px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .viewer-img-frame img {
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+        object-fit: contain;
+      }
+      .viewer-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .trait-badge-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 2px;
+      }
+      .trait-badge {
+        font-size: 9px;
+        font-family: monospace;
+        padding: 1px 4px;
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        color: var(--text-color);
+        cursor: pointer;
+      }
+      .trait-badge:hover {
+        border-color: var(--accent-color);
+        background: var(--bg-color);
+      }
+      .copy-btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+      .copy-sub-btn {
+        padding: 4px 6px;
+        font-size: 9px;
+        font-family: monospace;
+        white-space: nowrap;
+      }
+
+      /* Detail Box Expanded Injection View Styles */
+      .viewer-detail-box {
+        display: none;
+        width: 100%;
+        border-top: 1px dashed var(--border-color);
+        padding-top: 10px;
+        margin-top: 4px;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .viewer-card.expanded .viewer-detail-box {
+        display: flex;
+      }
+      .detail-row {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .detail-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted-text);
+      }
+      .detail-value-copiable {
+        font-size: 11px;
+        font-family: monospace;
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        padding: 6px 10px;
+        border-radius: 4px;
+        word-break: break-all;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .detail-value-copiable:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+      }
+      .tba-assets-panel {
+        font-size: 10px;
+        font-family: monospace;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 6px;
+        max-height: 120px;
+        overflow-y: auto;
+        background: var(--panel-bg);
+        color: var(--muted-text);
+      }
+
+      /* Send Terminal Styles */
+      .tba-send-terminal {
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--panel-bg);
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .terminal-row-grid {
+        display: grid;
+        grid-template-columns: 1fr 80px;
+        gap: 6px;
+      }
+      .terminal-input {
+        background: var(--bg-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        padding: 5px 8px;
+        font-size: 10px;
+        font-family: monospace;
+        border-radius: 4px;
+        outline: none;
+      }
+      .terminal-input:focus {
+        border-color: var(--accent-color);
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="header-left">
+        <div class="studio-title">Pixels Studio</div>
+        <button id="themeBtn" onclick="toggleTheme()">Theme: Light</button>
+      </div>
+      <div class="collection-status" id="mintTracker">MINTED: 0 / 250</div>
+      <div class="header-right">
+        <button id="walletBtn" onclick="handleWalletAction()">
+          Connect Wallet
+        </button>
+      </div>
+    </header>
+
+    <div class="studio-layout">
+      <section class="panel">
+        <button
+          onclick="resetToCurrentBase()"
+          style="
+            border-style: dashed;
+            width: 100%;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 4px;
+          "
+        >
+          Clear Settings
+        </button>
+
+        <div class="trait-group">
+          <div class="section-title">1. Base Archetype</div>
+          <div class="grid-options">
+            <button
+              onclick="setBaseModel('none')"
+              id="base-none"
+              style="grid-column: span 2"
+            >
+              None (Blank Canvas)
+            </button>
+            <button onclick="setBaseModel('human')" id="base-human">
+              Human
+            </button>
+            <button onclick="setBaseModel('cat')" id="base-cat">Cat</button>
+            <button onclick="setBaseModel('frog')" id="base-frog">Frog</button>
+            <button onclick="setBaseModel('dog')" id="base-dog">Dog</button>
+            <button
+              onclick="setBaseModel('robot')"
+              id="base-robot"
+              style="grid-column: span 2"
+            >
+              Robot
+            </button>
+          </div>
+        </div>
+
+        <div class="trait-group">
+          <div class="section-title">2. Skin Palette</div>
+          <div class="palette-grid" id="skinPalette"></div>
+        </div>
+
+        <div class="trait-group">
+          <div class="section-title">3. Add-on Traits</div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div>
+              <label
+                class="section-title"
+                style="font-size: 10px; display: block; margin-bottom: 4px"
+                >Headwear</label
+              >
+              <select id="traitHead" onchange="applyTraits()">
+                <option value="none">None</option>
+                <option value="cyber_halo">Cyber Halo</option>
+                <option value="beanie">Night Beanie</option>
+                <option value="crown">Gold Crown</option>
+              </select>
+            </div>
+            <div>
+              <label
+                class="section-title"
+                style="font-size: 10px; display: block; margin-bottom: 4px"
+                >Eyes & Face</label
+              >
+              <select id="traitEyes" onchange="applyTraits()">
+                <option value="none">None</option>
+                <option value="laser_beams">Laser Beams</option>
+                <option value="vibe_shades">Vibe Shades</option>
+                <option value="cyborg_eye">Cyborg Eye</option>
+                <option value="neon_shades">Neon Shades</option>
+              </select>
+            </div>
+            <div>
+              <label
+                class="section-title"
+                style="font-size: 10px; display: block; margin-bottom: 4px"
+                >Mouth & Accessories</label
+              >
+              <select id="traitMouth" onchange="applyTraits()">
+                <option value="none">None</option>
+                <option value="bubblegum">Bubblegum</option>
+                <option value="cigarette">Cigarette</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="trait-group">
+          <div class="section-title">Paint Tool Swatch</div>
+          <div class="palette-grid" id="artPalette"></div>
+        </div>
+
+        <div class="action-container" style="margin-top: auto">
+          <button
+            id="mintBtn"
+            onclick="deployOnChain()"
+            class="btn-mint"
+            disabled
+          >
+            Mint Reserve Slot
+          </button>
+        </div>
+      </section>
+
+      <section class="canvas-area">
+        <div class="pixel-container" id="pixelContainer"></div>
+        <div class="history-controls">
+          <button id="undoBtn" onclick="undo()" disabled>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 7v6h6"></path>
+              <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+            </svg>
+            Undo
+          </button>
+          <button id="redoBtn" onclick="redo()" disabled>
+            Redo
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 7v6h-6"></path>
+              <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div>
+          <div class="section-title">Inject Base Matrix / Custom Trait</div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              margin-bottom: 8px;
+            "
+          >
+            <input
+              type="text"
+              id="customTraitName"
+              class="text-field-input"
+              placeholder="Name your custom trait (e.g. Neon Shades)"
+              style="width: 100%; font-size: 11px; padding: 8px 12px"
+            />
+            <select
+              id="customTraitTargetSlot"
+              class="text-field-input"
+              style="
+                width: 100%;
+                font-size: 11px;
+                padding: 8px 12px;
+                height: auto;
+              "
+            >
+              <option value="Eyes">Assign to: Eyes & Face Menu</option>
+              <option value="Head">Assign to: Headwear Menu</option>
+              <option value="Mouth">Assign to: Mouth & Accessories Menu</option>
+            </select>
+          </div>
+          <textarea
+            id="importBox"
+            class="input-box"
+            placeholder="Paste custom string layout elements or raw SVG rect paths here..."
+            oninput="handleCustomSvgInjection()"
+          ></textarea>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column">
+          <div class="section-title">Compiled Source Engine Target</div>
+          <div class="source-box" id="sourceBox">&lt;svg&gt;&lt;/svg&gt;</div>
+        </div>
+
+        <div class="tx-status" id="txStatus" style="display: none">
+          <span style="font-size: 12px; font-weight: 600"
+            >Asset Anchored Onchain</span
+          >
+          <a id="txLink" href="#" target="_blank">View Transaction</a>
+        </div>
+      </section>
+
+      <section class="explorer-panel">
+        <div class="explorer-sub-section">
+          <div class="section-title">Pixel Explorer: Registry Lookup</div>
+          <div class="viewer-search-bar">
+            <input
+              type="text"
+              id="viewerSearchInput"
+              class="viewer-input"
+              placeholder="Paste target wallet address (0x...)"
+            />
+            <button onclick="fetchTargetWalletPixels(false)">Inspect</button>
+          </div>
+          <p
+            id="publicStatusMsg"
+            style="
+              font-size: 10px;
+              font-family: monospace;
+              color: var(--accent-color);
+              word-break: break-all;
+              min-height: 14px;
+              margin-bottom: 4px;
+            "
+          ></p>
+          <div class="explorer-scrollable">
+            <div class="viewer-card-grid" id="publicCardGrid"></div>
+          </div>
+        </div>
+
+        <div class="explorer-sub-section">
+          <div class="section-title">Pixel Explorer: Your Assets</div>
+          <p
+            id="vaultStatusMsg"
+            style="
+              font-size: 10px;
+              font-family: monospace;
+              color: var(--accent-color);
+              word-break: break-all;
+              min-height: 14px;
+              margin-bottom: 4px;
+            "
+          ></p>
+          <div class="explorer-scrollable">
+            <div class="viewer-card-grid" id="vaultCardGrid"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const CONTRACT_ADDRESS = "0x0ad7d335f8f7d25A9b548d9C6E12198448a47100";
+
+      const ABI = [
+        "function mintNFT(uint8[] xCoords, uint8[] yCoords, uint24[] hexColors) payable",
+        "function totalSupply() view returns (uint256)",
+        "function balanceOf(address owner) view returns (uint256)",
+        "function tokenURI(uint256 tokenId) view returns (string)",
+        "function renderSVG(uint256 tokenId) view returns (string)",
+        "function tokenBoundAccount(uint256) view returns (address)",
+        "function isWhitelisted(address) view returns (bool)",
+        "function hasMinted(address) view returns (bool)",
+        "function colorPalette(uint256) external view returns (string memory)",
+        "function ownerOf(uint256 tokenId) view returns (address)",
+      ];
+
+      const SKIN_COLORS = [
+        "#f3d2c1",
+        "#dfa07e",
+        "#5c3826",
+        "#00ffcc",
+        "#ff0055",
+        "#e2e8f0",
+      ];
+      const ART_COLORS = [
+        "#000000",
+        "#FFFFFF",
+        "#FF0000",
+        "#00FF00",
+        "#0000FF",
+        "#FFFF00",
+        "#00FFFF",
+        "#FF00FF",
+        "#555555",
+        "transparent",
+      ];
+      const THEMES = ["light", "dark", "cyberpunk", "matrix"];
+
+      let currentThemeIdx = 0;
+      const GRID_SIZE = 16;
+
+      const BASE_MODELS = {
+        none: { outline: [], fill: [], features: {} },
+        human: {
+          outline: [
+            [5, 4],
+            [6, 4],
+            [7, 4],
+            [8, 4],
+            [9, 4],
+            [10, 4],
+            [4, 5],
+            [11, 5],
+            [4, 6],
+            [11, 6],
+            [4, 7],
+            [11, 7],
+            [4, 8],
+            [11, 8],
+            [4, 9],
+            [11, 9],
+            [4, 10],
+            [11, 10],
+            [4, 11],
+            [11, 11],
+            [4, 12],
+            [5, 12],
+            [6, 12],
+            [7, 12],
+            [8, 12],
+            [9, 12],
+            [10, 12],
+            [11, 12],
+          ],
+          fill: [
+            [5, 5],
+            [6, 5],
+            [7, 5],
+            [8, 5],
+            [9, 5],
+            [10, 5],
+            [5, 6],
+            [6, 6],
+            [7, 6],
+            [8, 6],
+            [9, 6],
+            [10, 6],
+            [5, 7],
+            [6, 7],
+            [7, 7],
+            [8, 7],
+            [9, 7],
+            [10, 7],
+            [5, 8],
+            [6, 8],
+            [7, 8],
+            [8, 8],
+            [9, 8],
+            [10, 8],
+            [5, 9],
+            [6, 9],
+            [7, 9],
+            [8, 9],
+            [9, 9],
+            [10, 9],
+            [5, 10],
+            [6, 10],
+            [9, 10],
+            [10, 10],
+            [5, 11],
+            [6, 11],
+            [7, 11],
+            [8, 11],
+            [9, 11],
+            [10, 11],
+          ],
+          features: {
+            "#ffffff": [
+              [5, 7],
+              [6, 7],
+              [9, 7],
+              [10, 7],
+            ],
+            "#000000": [
+              [6, 7],
+              [9, 7],
+              [7, 10],
+              [8, 10],
+            ],
+          },
+        },
+        cat: {
+          outline: [
+            [4, 3],
+            [11, 3],
+            [5, 4],
+            [10, 4],
+            [6, 4],
+            [7, 4],
+            [8, 4],
+            [9, 4],
+            [4, 5],
+            [11, 5],
+            [4, 6],
+            [11, 6],
+            [4, 7],
+            [11, 7],
+            [4, 8],
+            [11, 8],
+            [4, 9],
+            [11, 9],
+            [4, 10],
+            [11, 10],
+            [4, 11],
+            [5, 11],
+            [6, 11],
+            [7, 11],
+            [8, 11],
+            [9, 11],
+            [10, 11],
+            [11, 11],
+          ],
+          fill: [
+            [4, 4],
+            [11, 4],
+            [5, 5],
+            [6, 5],
+            [7, 5],
+            [8, 5],
+            [9, 5],
+            [10, 5],
+            [5, 6],
+            [6, 6],
+            [7, 6],
+            [8, 6],
+            [9, 6],
+            [10, 6],
+            [5, 7],
+            [6, 7],
+            [7, 7],
+            [8, 7],
+            [9, 7],
+            [10, 7],
+            [5, 8],
+            [6, 8],
+            [7, 8],
+            [8, 8],
+            [9, 8],
+            [10, 8],
+            [5, 9],
+            [6, 9],
+            [7, 9],
+            [8, 9],
+            [9, 9],
+            [10, 9],
+            [5, 10],
+            [6, 10],
+            [7, 10],
+            [8, 10],
+            [9, 10],
+            [10, 10],
+          ],
+          features: {
+            "#ffffff": [
+              [5, 7],
+              [6, 7],
+              [9, 7],
+              [10, 7],
+            ],
+            "#00ffcc": [
+              [5, 7],
+              [10, 7],
+            ],
+            "#000000": [
+              [6, 7],
+              [9, 7],
+              [7, 9],
+              [8, 9],
+            ],
+          },
+        },
+        dog: {
+          outline: [
+            [5, 4],
+            [6, 4],
+            [7, 4],
+            [8, 4],
+            [9, 4],
+            [10, 4],
+            [4, 5],
+            [11, 5],
+            [3, 6],
+            [12, 6],
+            [3, 7],
+            [12, 7],
+            [3, 8],
+            [12, 8],
+            [4, 9],
+            [11, 9],
+            [4, 10],
+            [11, 10],
+            [4, 11],
+            [11, 11],
+            [4, 12],
+            [5, 12],
+            [6, 12],
+            [7, 12],
+            [8, 12],
+            [9, 12],
+            [10, 12],
+            [11, 12],
+          ],
+          fill: [
+            [5, 5],
+            [6, 5],
+            [7, 5],
+            [8, 5],
+            [9, 5],
+            [10, 5],
+            [5, 6],
+            [6, 6],
+            [7, 6],
+            [8, 6],
+            [9, 6],
+            [10, 6],
+            [5, 7],
+            [6, 7],
+            [7, 7],
+            [8, 7],
+            [9, 7],
+            [10, 7],
+            [5, 8],
+            [6, 8],
+            [7, 8],
+            [8, 8],
+            [9, 8],
+            [10, 8],
+            [5, 9],
+            [6, 9],
+            [7, 9],
+            [8, 9],
+            [9, 9],
+            [10, 9],
+            [5, 10],
+            [6, 10],
+            [7, 10],
+            [8, 10],
+            [9, 10],
+            [10, 10],
+            [5, 11],
+            [6, 11],
+            [7, 11],
+            [8, 11],
+            [9, 11],
+            [10, 11],
+          ],
+          features: {
+            "#7f5539": [
+              [3, 6],
+              [12, 6],
+              [3, 7],
+              [12, 7],
+              [3, 8],
+              [12, 8],
+            ],
+            "#ffffff": [
+              [5, 7],
+              [6, 7],
+              [9, 7],
+              [10, 7],
+            ],
+            "#000000": [
+              [5, 7],
+              [10, 7],
+              [7, 9],
+              [8, 9],
+            ],
+          },
+        },
+        frog: {
+          outline: [
+            [4, 5],
+            [5, 5],
+            [6, 5],
+            [9, 5],
+            [10, 5],
+            [11, 5],
+            [3, 6],
+            [7, 6],
+            [8, 6],
+            [12, 6],
+            [3, 7],
+            [12, 7],
+            [3, 8],
+            [12, 8],
+            [3, 9],
+            [12, 9],
+            [3, 10],
+            [12, 10],
+            [4, 11],
+            [5, 11],
+            [6, 11],
+            [7, 11],
+            [8, 11],
+            [9, 11],
+            [10, 11],
+            [11, 11],
+          ],
+          fill: [
+            [4, 6],
+            [5, 6],
+            [6, 6],
+            [9, 6],
+            [10, 6],
+            [11, 6],
+            [4, 7],
+            [5, 7],
+            [6, 7],
+            [7, 7],
+            [8, 7],
+            [9, 7],
+            [10, 7],
+            [11, 7],
+            [4, 8],
+            [5, 8],
+            [6, 8],
+            [7, 8],
+            [8, 8],
+            [9, 8],
+            [10, 8],
+            [11, 8],
+            [4, 9],
+            [5, 9],
+            [6, 9],
+            [7, 9],
+            [8, 9],
+            [9, 9],
+            [10, 9],
+            [11, 9],
+            [4, 10],
+            [5, 10],
+            [6, 10],
+            [7, 10],
+            [8, 10],
+            [9, 10],
+            [10, 10],
+            [11, 10],
+          ],
+          features: {
+            "#ffffff": [
+              [5, 6],
+              [10, 6],
+            ],
+            "#000000": [
+              [5, 7],
+              [10, 7],
+              [5, 9],
+              [6, 9],
+              [7, 9],
+              [8, 9],
+              [9, 9],
+              [10, 9],
+            ],
+          },
+        },
+        robot: {
+          outline: [
+            [7, 3],
+            [8, 3],
+            [7, 4],
+            [8, 4],
+            [4, 6],
+            [5, 6],
+            [6, 6],
+            [7, 6],
+            [8, 6],
+            [9, 6],
+            [10, 6],
+            [11, 6],
+            [4, 7],
+            [11, 7],
+            [4, 8],
+            [11, 8],
+            [4, 9],
+            [11, 9],
+            [4, 10],
+            [11, 10],
+            [4, 11],
+            [11, 11],
+            [3, 12],
+            [4, 12],
+            [5, 12],
+            [6, 12],
+            [7, 12],
+            [8, 12],
+            [9, 12],
+            [10, 12],
+            [11, 12],
+            [12, 12],
+          ],
+          fill: [
+            [5, 7],
+            [6, 7],
+            [7, 7],
+            [8, 7],
+            [9, 7],
+            [10, 7],
+            [5, 8],
+            [6, 8],
+            [7, 8],
+            [8, 8],
+            [9, 8],
+            [10, 8],
+            [5, 9],
+            [6, 9],
+            [7, 9],
+            [8, 9],
+            [9, 9],
+            [10, 9],
+            [5, 10],
+            [6, 10],
+            [7, 10],
+            [8, 10],
+            [9, 10],
+            [10, 10],
+            [5, 11],
+            [6, 11],
+            [7, 11],
+            [8, 11],
+            [9, 11],
+            [10, 11],
+          ],
+          features: {
+            "#00ffff": [
+              [6, 8],
+              [9, 8],
+            ],
+            "#555555": [
+              [6, 10],
+              [7, 10],
+              [8, 10],
+              [9, 10],
+            ],
+          },
+        },
+      };
+
+      const TRAITS = {
+        cyber_halo: {
+          layers: [
+            {
+              color: "#00FFFF",
+              cells: [
+                [4, 3],
+                [5, 3],
+                [6, 3],
+                [7, 3],
+                [8, 3],
+                [9, 3],
+                [10, 3],
+                [11, 3],
+              ],
+            },
+          ],
+        },
+        beanie: {
+          layers: [
+            {
+              color: "#ff0055",
+              cells: [
+                [4, 4],
+                [5, 4],
+                [6, 4],
+                [7, 4],
+                [8, 4],
+                [9, 4],
+                [10, 4],
+                [11, 4],
+                [4, 5],
+                [5, 5],
+                [6, 5],
+                [7, 5],
+                [8, 5],
+                [9, 5],
+                [10, 5],
+                [11, 5],
+              ],
+            },
+          ],
+        },
+        crown: {
+          layers: [
+            {
+              color: "#FFFF00",
+              cells: [
+                [4, 2],
+                [7, 2],
+                [11, 2],
+                [4, 3],
+                [5, 3],
+                [6, 3],
+                [7, 3],
+                [8, 3],
+                [9, 3],
+                [10, 3],
+                [11, 3],
+              ],
+            },
+          ],
+        },
+        laser_beams: {
+          layers: [
+            {
+              color: "#FF0000",
+              cells: [
+                [0, 6],
+                [1, 6],
+                [2, 6],
+                [3, 6],
+                [4, 6],
+                [5, 6],
+                [6, 6],
+                [7, 6],
+                [8, 6],
+                [9, 6],
+                [10, 6],
+                [11, 6],
+                [12, 6],
+                [13, 6],
+                [14, 6],
+                [15, 6],
+                [0, 7],
+                [1, 7],
+                [2, 7],
+                [3, 7],
+                [4, 7],
+                [5, 7],
+                [6, 7],
+                [7, 7],
+                [8, 7],
+                [9, 7],
+                [10, 7],
+                [11, 7],
+                [12, 7],
+                [13, 7],
+                [14, 7],
+                [15, 7],
+              ],
+            },
+          ],
+        },
+        vibe_shades: {
+          layers: [
+            {
+              color: "#000000",
+              cells: [
+                [4, 6],
+                [5, 6],
+                [6, 6],
+                [7, 6],
+                [8, 6],
+                [9, 6],
+                [10, 6],
+                [11, 6],
+                [4, 7],
+                [5, 7],
+                [6, 7],
+                [7, 7],
+                [8, 7],
+                [9, 7],
+                [10, 7],
+                [11, 7],
+              ],
+            },
+          ],
+        },
+        cyborg_eye: {
+          layers: [
+            {
+              color: "#FF0055",
+              cells: [
+                [5, 7],
+                [6, 7],
+                [5, 8],
+              ],
+            },
+          ],
+        },
+        neon_shades: {
+          layers: [
+            {
+              color: "#000000",
+              cells: [
+                [3, 6],
+                [4, 6],
+                [5, 6],
+                [6, 6],
+                [7, 6],
+                [8, 6],
+                [9, 6],
+                [10, 6],
+                [11, 6],
+                [12, 6],
+                [3, 7],
+                [4, 7],
+                [5, 7],
+                [6, 7],
+                [7, 7],
+                [8, 7],
+                [9, 7],
+                [10, 7],
+                [11, 7],
+                [12, 7],
+                [2, 6],
+                [13, 6],
+              ],
+            },
+            {
+              color: "#ff0055",
+              cells: [
+                [4, 7],
+                [5, 7],
+                [6, 7],
+                [9, 7],
+                [10, 7],
+                [11, 7],
+              ],
+            },
+            {
+              color: "#ffffff",
+              cells: [
+                [4, 6],
+                [9, 6],
+              ],
+            },
+          ],
+        },
+        bubblegum: {
+          layers: [
+            {
+              color: "#FF00FF",
+              cells: [
+                [7, 10],
+                [8, 10],
+                [7, 11],
+                [8, 11],
+              ],
+            },
+          ],
+        },
+        cigarette: {
+          layers: [
+            { color: "#FFFFFF", cells: [[9, 10]] },
+            { color: "#E6A15C", cells: [[10, 10]] },
+            { color: "#B0B0B0", cells: [[11, 9]] },
+          ],
+        },
+      };
+
+      let currentBase = "human";
+      let currentSkinColor = "#f3d2c1";
+      let baseGrid = Array(GRID_SIZE * GRID_SIZE).fill("transparent");
+      let customOverlay = Array(GRID_SIZE * GRID_SIZE).fill("transparent");
+      let activeColor = "#000000";
+      let isDrawing = false;
+
+      let undoStack = [];
+      let redoStack = [];
+
+      let provider = null,
+        signer = null,
+        walletAddress = null;
+      let svgPreview = "";
+      let supplyPollInterval = null;
+
+      function xyToIdx(x, y) {
+        return y * GRID_SIZE + x;
+      }
+
+      function init() {
+        renderSwatches("skinPalette", SKIN_COLORS, (color) => {
+          currentSkinColor = color;
+          applyTraits();
+        });
+        renderSwatches("artPalette", ART_COLORS, (color) => {
+          activeColor = color;
+        });
+        setBaseModel("human");
+
+        document.body.onmousedown = () => {
+          isDrawing = true;
+        };
+        document.body.onmouseup = () => {
+          isDrawing = false;
+        };
+        updateSupplyCounter();
+
+        if (supplyPollInterval) clearInterval(supplyPollInterval);
+        supplyPollInterval = setInterval(updateSupplyCounter, 4000);
+      }
+
+      function toggleTheme() {
+        document.body.classList.remove(`theme-${THEMES[currentThemeIdx]}`);
+        currentThemeIdx = (currentThemeIdx + 1) % THEMES.length;
+        if (THEMES[currentThemeIdx] !== "light") {
+          document.body.classList.add(`theme-${THEMES[currentThemeIdx]}`);
+        }
+        document.getElementById("themeBtn").innerText = `Theme: ${
+          THEMES[currentThemeIdx].charAt(0).toUpperCase() +
+          THEMES[currentThemeIdx].slice(1)
+        }`;
+      }
+
+      function saveHistoryState() {
+        undoStack.push([...customOverlay]);
+        redoStack = [];
+        updateHistoryButtons();
+      }
+
+      function undo() {
+        if (undoStack.length === 0) return;
+        redoStack.push([...customOverlay]);
+        customOverlay = undoStack.pop();
+        updateHistoryButtons();
+        syncCanvasUI();
+      }
+
+      function redo() {
+        if (redoStack.length === 0) return;
+        undoStack.push([...customOverlay]);
+        customOverlay = redoStack.pop();
+        updateHistoryButtons();
+        syncCanvasUI();
+      }
+
+      function updateHistoryButtons() {
+        document.getElementById("undoBtn").disabled = undoStack.length === 0;
+        document.getElementById("redoBtn").disabled = redoStack.length === 0;
+      }
+
+      function renderSwatches(containerId, dataArray, selectionCallback) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = "";
+        dataArray.forEach((color, idx) => {
+          const swatch = document.createElement("div");
+          swatch.className = `color-swatch ${
+            idx === 0 && containerId === "artPalette" ? "active" : ""
+          }`;
+          swatch.style.backgroundColor =
+            color === "transparent" ? "#222" : color;
+          if (color === "transparent") swatch.style.borderStyle = "dashed";
+
+          swatch.onclick = () => {
+            container
+              .querySelectorAll(".color-swatch")
+              .forEach((s) => s.classList.remove("active"));
+            swatch.classList.add("active");
+            selectionCallback(color);
+          };
+          container.appendChild(swatch);
+        });
+      }
+
+      function setBaseModel(modelKey) {
+        currentBase = modelKey;
+        ["none", "human", "cat", "frog", "dog", "robot"].forEach((m) => {
+          const btn = document.getElementById(`base-${m}`);
+          if (btn)
+            btn.style =
+              m === modelKey
+                ? "background:var(--text-color); color:var(--bg-color); border-color:var(--text-color);"
+                : "";
+        });
+        applyTraits();
+      }
+
+      function applyTraits() {
+        baseGrid = Array(GRID_SIZE * GRID_SIZE).fill("transparent");
+        const model = BASE_MODELS[currentBase];
+
+        if (model) {
+          let fillTone = currentSkinColor;
+          if (currentBase === "frog") fillTone = "#00ffcc";
+          if (currentBase === "robot") fillTone = "#e2e8f0";
+
+          model.fill.forEach(([x, y]) => {
+            baseGrid[xyToIdx(x, y)] = fillTone;
+          });
+          model.outline.forEach(([x, y]) => {
+            baseGrid[xyToIdx(x, y)] = "#000000";
+          });
+          Object.keys(model.features).forEach((color) => {
+            model.features[color].forEach(([x, y]) => {
+              baseGrid[xyToIdx(x, y)] = color;
+            });
+          });
+        }
+
+        ["Head", "Eyes", "Mouth"].forEach((type) => {
+          const val = document.getElementById(`trait${type}`).value;
+          if (val !== "none" && TRAITS[val]) {
+            TRAITS[val].layers.forEach((layer) => {
+              layer.cells.forEach(([x, y]) => {
+                baseGrid[xyToIdx(x, y)] = layer.color;
+              });
+            });
+          }
+        });
+
+        syncCanvasUI();
+      }
+
+      function resetToCurrentBase() {
+        customOverlay = Array(GRID_SIZE * GRID_SIZE).fill("transparent");
+        undoStack = [];
+        redoStack = [];
+        updateHistoryButtons();
+        document.getElementById("importBox").value = "";
+        document.getElementById("customTraitName").value = "";
+        document.getElementById("traitHead").value = "none";
+        document.getElementById("traitEyes").value = "none";
+        document.getElementById("traitMouth").value = "none";
+        applyTraits();
+      }
+
+      function syncCanvasUI() {
+        const container = document.getElementById("pixelContainer");
+        if (container.children.length === 0) {
+          container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+          for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            const cell = document.createElement("div");
+            cell.className = "pixel-cell";
+            cell.onmouseover = (e) => handlePixelDraw(e, i);
+            cell.onmousedown = (e) => {
+              saveHistoryState();
+              handlePixelDraw(e, i, true);
+            };
+            container.appendChild(cell);
+          }
+        }
+
+        for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+          const cell = container.children[i];
+          cell.style.backgroundColor =
+            customOverlay[i] !== "transparent" ? customOverlay[i] : baseGrid[i];
+        }
+        compileActiveSVG();
+      }
+
+      function handlePixelDraw(e, idx, force = false) {
+        if (!isDrawing && !force) return;
+        customOverlay[idx] = activeColor;
+        const cell = document.getElementById("pixelContainer").children[idx];
+        cell.style.backgroundColor =
+          activeColor !== "transparent" ? activeColor : baseGrid[idx];
+        compileActiveSVG();
+      }
+
+      function handleCustomSvgInjection() {
+        const input = document.getElementById("importBox").value.trim();
+        if (!input) return;
+
+        if (input.includes("<rect")) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(
+            `<svg>${input}</svg>`,
+            "image/svg+xml"
+          );
+          const rects = doc.querySelectorAll("rect");
+
+          if (rects.length > 0) {
+            saveHistoryState();
+            const colorLayersMap = {};
+
+            rects.forEach((r) => {
+              const x = parseInt(r.getAttribute("x") || "0");
+              const y = parseInt(r.getAttribute("y") || "0");
+              const fill = (r.getAttribute("fill") || "#000000").toLowerCase();
+
+              if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+                customOverlay[xyToIdx(x, y)] = fill;
+                if (!colorLayersMap[fill]) colorLayersMap[fill] = [];
+                colorLayersMap[fill].push([x, y]);
+              }
+            });
+
+            let rawTitleInput = document
+              .getElementById("customTraitName")
+              .value.trim();
+            if (!rawTitleInput) {
+              rawTitleInput =
+                "Injected Trait " + Math.floor(Math.random() * 1000);
+              document.getElementById("customTraitName").value = rawTitleInput;
+            }
+
+            const traitKey = rawTitleInput
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "_");
+            const selectedSlot = document.getElementById(
+              "customTraitTargetSlot"
+            ).value;
+            const targetSelectMenu = document.getElementById(
+              `trait${selectedSlot}`
+            );
+
+            const compiledLayers = Object.keys(colorLayersMap).map(
+              (colorHex) => {
+                return { color: colorHex, cells: colorLayersMap[colorHex] };
+              }
+            );
+
+            TRAITS[traitKey] = { layers: compiledLayers };
+
+            if (
+              !targetSelectMenu.querySelector(`option[value="${traitKey}"]`)
+            ) {
+              const opt = document.createElement("option");
+              opt.value = traitKey;
+              opt.innerText = rawTitleInput + " (Injected)";
+              targetSelectMenu.appendChild(opt);
+            }
+
+            targetSelectMenu.value = traitKey;
+            syncCanvasUI();
+          }
+        }
+      }
+
+      function compileActiveSVG() {
+        let svgBody = "";
+        for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+          const color =
+            customOverlay[i] !== "transparent" ? customOverlay[i] : baseGrid[i];
+          if (color !== "transparent" && color !== "none") {
+            svgBody += `<rect x="${i % GRID_SIZE}" y="${Math.floor(
+              i / GRID_SIZE
+            )}" width="1" height="1" fill="${color}"/>`;
+          }
+        }
+        svgPreview = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges" width="100%" height="100%"><rect width="16" height="16" fill="none"/>${svgBody}</svg>`;
+        document.getElementById("sourceBox").innerText = svgPreview;
+      }
+
+      async function handleWalletAction() {
+        if (walletAddress) {
+          walletAddress = null;
+          signer = null;
+          provider = null;
+          document.getElementById("walletBtn").innerText = "Connect Wallet";
+          document.getElementById("mintBtn").disabled = true;
+          document.getElementById("publicStatusMsg").innerText = "";
+          document.getElementById("vaultStatusMsg").innerText =
+            "Wallet disconnected.";
+          document.getElementById("publicCardGrid").innerHTML = "";
+          document.getElementById("vaultCardGrid").innerHTML = "";
+          return;
+        }
+
+        if (window.ethereum) {
+          try {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            signer = await provider.getSigner();
+            walletAddress = accounts[0];
+
+            document.getElementById(
+              "walletBtn"
+            ).innerText = `${walletAddress.substring(
+              0,
+              6
+            )}...${walletAddress.substring(38)}`;
+            document.getElementById("mintBtn").disabled = false;
+            updateSupplyCounter();
+            fetchTargetWalletPixels(true);
+          } catch (err) {
+            console.error("Wallet connectivity error:", err);
+          }
+        } else {
+          alert("MetaMask wallet trace absent.");
+        }
+      }
+
+      async function updateSupplyCounter() {
+        if (
+          !window.ethereum ||
+          CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000"
+        )
+          return;
+        try {
+          const tempProv = new ethers.BrowserProvider(window.ethereum);
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, tempProv);
+          const supply = await contract.totalSupply();
+          document.getElementById(
+            "mintTracker"
+          ).innerText = `MINTED: ${supply.toString()} / 250`;
+        } catch (e) {
+          console.log("Counter tracking update skipped.");
+        }
+      }
+
+      async function deployOnChain() {
+        if (!signer) return alert("Wallet unlinked.");
+        try {
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+          const xCoords = [],
+            yCoords = [],
+            hexColors = [];
+
+          for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            const color =
+              customOverlay[i] !== "transparent"
+                ? customOverlay[i]
+                : baseGrid[i];
+            if (color !== "transparent" && color !== "none") {
+              let cleanColorHex = color.replace("#", "").trim();
+              if (cleanColorHex.length === 3) {
+                cleanColorHex = cleanColorHex
+                  .split("")
+                  .map((c) => c + c)
+                  .join("");
+              }
+              xCoords.push(i % GRID_SIZE);
+              yCoords.push(Math.floor(i / GRID_SIZE));
+              hexColors.push(parseInt(cleanColorHex, 16));
+            }
+          }
+
+          document.getElementById("mintBtn").innerText = "Authorizing...";
+          const tx = await contract.mintNFT(xCoords, yCoords, hexColors, {
+            value: ethers.parseEther("0.001"),
+          });
+          document.getElementById("txStatus").style.display = "block";
+          document.getElementById(
+            "txLink"
+          ).href = `https://sepolia.etherscan.io/tx/${tx.hash}`;
+
+          await tx.wait();
+          document.getElementById("mintBtn").innerText = "Mint Reserve Slot";
+          alert("Pixel design compiled on-chain.");
+          updateSupplyCounter();
+          fetchTargetWalletPixels(true);
+        } catch (err) {
+          console.error(err);
+          document.getElementById("mintBtn").innerText = "Mint Reserve Slot";
+          alert("Transaction interrupted.");
+        }
+      }
+
+      async function fetchTargetWalletPixels(isOwnVault = false) {
+        const inputVal = document
+          .getElementById("viewerSearchInput")
+          .value.trim();
+        const publicStatus = document.getElementById("publicStatusMsg");
+        const vaultStatus = document.getElementById("vaultStatusMsg");
+        const publicGrid = document.getElementById("publicCardGrid");
+        const vaultGrid = document.getElementById("vaultCardGrid");
+
+        let activeTarget = isOwnVault
+          ? walletAddress ||
+            (window.ethereum && window.ethereum.selectedAddress)
+          : inputVal;
+
+        if (!isOwnVault) {
+          if (!activeTarget || !ethers.isAddress(activeTarget)) {
+            publicStatus.innerText =
+              "Provide active target parameter address inputs.";
+            return;
+          }
+          publicStatus.innerText = `Scanning: ${activeTarget.substring(
+            0,
+            6
+          )}...${activeTarget.substring(38)}`;
+          publicGrid.innerHTML = "";
+        } else {
+          if (!activeTarget) {
+            vaultStatus.innerText = "Connect wallet to trace holdings.";
+            return;
+          }
+          vaultStatus.innerText = "Syncing local balance keys...";
+          vaultGrid.innerHTML = "";
+        }
+
+        try {
+          const prov = new ethers.BrowserProvider(window.ethereum);
+          const viewingContract = new ethers.Contract(
+            CONTRACT_ADDRESS,
+            ABI,
+            prov
+          );
+          const balance = await viewingContract.balanceOf(activeTarget);
+          const count = Number(balance);
+
+          if (count === 0) {
+            if (!isOwnVault)
+              publicStatus.innerText = "Output shows 0 holdings.";
+            else
+              vaultStatus.innerText = "No holdings located under this profile.";
+            return;
+          }
+
+          let totalChainSupply = 250;
+          try {
+            totalChainSupply = Number(await viewingContract.totalSupply());
+          } catch (err) {}
+
+          let foundCount = 0;
+          for (let tokenId = 1; tokenId <= totalChainSupply; tokenId++) {
+            if (foundCount >= count) break;
+            try {
+              const owner = await viewingContract.ownerOf(tokenId);
+              if (owner.toLowerCase() !== activeTarget.toLowerCase()) continue;
+
+              const tokenUriData = await viewingContract.tokenURI(tokenId);
+              const rawJson = atob(tokenUriData.split(",")[1]);
+              const metadata = JSON.parse(rawJson);
+              const assetSvgCode = await viewingContract.renderSVG(tokenId);
+              const tbaWallet = await viewingContract.tokenBoundAccount(
+                tokenId
+              );
+
+              let headwearRects = "",
+                eyesRects = "",
+                mouthRects = "",
+                purelyTraitsRects = "";
+
+              if (metadata.attributes && Array.isArray(metadata.attributes)) {
+                metadata.attributes.forEach((attr) => {
+                  if (!attr.value || attr.value === "None") return;
+                  const traitKey = attr.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]/g, "_");
+
+                  if (TRAITS[traitKey]) {
+                    let rectSlices = "";
+                    TRAITS[traitKey].layers.forEach((layer) => {
+                      layer.cells.forEach(([x, y]) => {
+                        rectSlices += `<rect x="${x}" y="${y}" width="1" height="1" fill="${layer.color}"/>\n`;
+                      });
+                    });
+
+                    purelyTraitsRects += rectSlices;
+                    if (attr.trait_type === "Headwear")
+                      headwearRects = rectSlices.trim();
+                    if (attr.trait_type === "Eyes & Face")
+                      eyesRects = rectSlices.trim();
+                    if (attr.trait_type === "Mouth & Accessories")
+                      mouthRects = rectSlices.trim();
+                  }
+                });
+              }
+
+              renderVaultCard(
+                tokenId,
+                metadata.image,
+                tbaWallet,
+                assetSvgCode,
+                headwearRects,
+                eyesRects,
+                mouthRects,
+                purelyTraitsRects.trim(),
+                isOwnVault ? vaultGrid : publicGrid
+              );
+              foundCount++;
+            } catch (tokenErr) {}
+          }
+
+          if (!isOwnVault)
+            publicStatus.innerText = `Found ${count} structural pixels.`;
+          else vaultStatus.innerText = `Loaded ${count} personal pixel assets.`;
+        } catch (e) {
+          if (!isOwnVault) publicStatus.innerText = "Error pulling data.";
+          else vaultStatus.innerText = "Error parsing inventory elements.";
+        }
+      }
+
+      function renderVaultCard(
+        id,
+        base64ImageSrc,
+        tbaWalletAddress,
+        pristineSvgSource,
+        headwearRects,
+        eyesRects,
+        mouthRects,
+        purelyTraitsRects,
+        targetContainerGrid
+      ) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "viewer-card";
+        wrapper.id = `viewer-card-${tbaWalletAddress}`;
+
+        wrapper.addEventListener("click", function (e) {
+          if (
+            e.target.closest(".copy-btn-group") ||
+            e.target.closest(".trait-badge-list") ||
+            e.target.closest(".viewer-detail-box")
+          )
+            return;
+          this.classList.toggle("expanded");
+          if (this.classList.contains("expanded")) {
+            queryTBAOnChainHoldings(tbaWalletAddress);
+          }
+        });
+
+        wrapper.innerHTML = `
+          <div class="viewer-card-summary">
+             <div class="viewer-img-frame"><img src="${base64ImageSrc}"></div>
+             <div class="viewer-info">
+                <div style="font-weight: 700; font-size: 12px;">ID #${id}</div>
+                <div style="font-size: 9px; font-family: monospace; opacity: 0.7;">
+                   <span style="color: var(--accent-color);">TBA:</span> ${tbaWalletAddress.substring(
+                     0,
+                     5
+                   )}...${tbaWalletAddress.substring(35)}
+                </div>
+                <div class="trait-badge-list">
+                  <span class="trait-badge" onclick="executeInlineCopy(event, this, '${btoa(
+                    headwearRects
+                  )}')">Headwear</span>
+                  <span class="trait-badge" onclick="executeInlineCopy(event, this, '${btoa(
+                    eyesRects
+                  )}')">Eyes</span>
+                  <span class="trait-badge" onclick="executeInlineCopy(event, this, '${btoa(
+                    mouthRects
+                  )}')">Mouth</span>
+                </div>
+             </div>
+             <div class="copy-btn-group">
+                <button class="copy-sub-btn" onclick="executeVaultClipboardCopy(this, '${btoa(
+                  pristineSvgSource
+                )}')">SVG</button>
+                <button class="copy-sub-btn" onclick="executeVaultClipboardCopy(this, '${btoa(
+                  purelyTraitsRects
+                )}')">Traits</button>
+             </div>
+          </div>
+          
+          <div class="viewer-detail-box">
+             <div class="detail-row">
+                <div class="detail-label">TBA Wallet Address</div>
+                <div class="detail-value-copiable" onclick="executeTextCopy(this, '${tbaWalletAddress}')">
+                   <span>${tbaWalletAddress}</span><span style="font-size: 9px; opacity: 0.6;">COPY</span>
+                </div>
+             </div>
+             <div class="detail-row">
+                <div class="detail-label">TBA Inventory Assets</div>
+                <div class="tba-assets-panel" id="assets-panel-${tbaWalletAddress}">
+                   Scanning Sepolia ledger states...
+                </div>
+             </div>
+             <div class="detail-row">
+                <div class="detail-label">TBA Outbound Terminal</div>
+                <div class="tba-send-terminal">
+                   <div style="display:flex; gap:4px; margin-bottom:2px;">
+                     <select id="asset-select-${tbaWalletAddress}" class="terminal-input" style="padding:4px; height:24px; flex:1;">
+                        <option value="ETH">Native ETH</option>
+                     </select>
+                     <input type="text" id="send-amount-${tbaWalletAddress}" class="terminal-input" placeholder="Amount" style="width:70px; height:24px;"/>
+                   </div>
+                   <div class="terminal-row-grid">
+                     <input type="text" id="send-to-${tbaWalletAddress}" class="terminal-input" placeholder="Recipient address (0x...)"/>
+                     <button id="send-btn-${tbaWalletAddress}" onclick="dispatchTBAAction(event, '${tbaWalletAddress}')" style="padding:0; height:24px; font-size:10px; font-weight:600;">Transfer</button>
+                   </div>
+                </div>
+             </div>
+          </div>
+        `;
+        targetContainerGrid.appendChild(wrapper);
+      }
+
+      async function queryTBAOnChainHoldings(tbaAddress) {
+        const panel = document.getElementById(`assets-panel-${tbaAddress}`);
+        const selector = document.getElementById(`asset-select-${tbaAddress}`);
+        if (!panel) return;
+
+        try {
+          const prov = new ethers.BrowserProvider(window.ethereum);
+          const balanceWei = await prov.getBalance(tbaAddress);
+          const balanceEth = ethers.formatEther(balanceWei);
+
+          let htmlReport = `⚡ ETH Balance: ${parseFloat(balanceEth).toFixed(
+            4
+          )} ETH<br>`;
+
+          // Clear standard dropdown options except native baseline
+          if (selector) {
+            selector.innerHTML = `<option value="ETH">Native ETH (${parseFloat(
+              balanceEth
+            ).toFixed(3)})</option>`;
+          }
+
+          const currentBlock = await prov.getBlockNumber();
+          const scanFromBlock = Math.max(0, currentBlock - 100000);
+
+          const filterTopicTransfer = ethers.id(
+            "Transfer(address,address,uint256)"
+          );
+          const tbaAddressTopic = ethers.zeroPadValue(tbaAddress, 32);
+
+          const [logsIn, logsOut] = await Promise.all([
+            prov.getLogs({
+              fromBlock: scanFromBlock,
+              toBlock: currentBlock,
+              topics: [filterTopicTransfer, null, tbaAddressTopic],
+            }),
+            prov.getLogs({
+              fromBlock: scanFromBlock,
+              toBlock: currentBlock,
+              topics: [filterTopicTransfer, tbaAddressTopic, null],
+            }),
+          ]);
+
+          const localizedContracts = new Set();
+          logsIn.forEach((l) => localizedContracts.add(l.address));
+          logsOut.forEach((l) => localizedContracts.add(l.address));
+
+          let foundTokens = [];
+          let foundNfts = [];
+
+          for (const contractAddr of localizedContracts) {
+            try {
+              const contract = new ethers.Contract(
+                contractAddr,
+                [
+                  "function balanceOf(address) view returns (uint256)",
+                  "function name() view returns (string)",
+                  "function symbol() view returns (string)",
+                  "function decimals() view returns (uint8)",
+                  "function supportsInterface(bytes4) view returns (bool)",
+                ],
+                prov
+              );
+
+              const balance = await contract.balanceOf(tbaAddress);
+              if (balance > 0n) {
+                let sym = "TOKEN";
+                try {
+                  sym = await contract.symbol();
+                } catch (e) {}
+                let isNft = false;
+                try {
+                  isNft = await contract.supportsInterface("0x80ac58cd");
+                } catch (e) {}
+
+                if (isNft) {
+                  foundNfts.push(
+                    `  🖼️ ${sym} (NFT) - ID Count: ${balance.toString()}`
+                  );
+                } else {
+                  let decimals = 18;
+                  try {
+                    decimals = await contract.decimals();
+                  } catch (e) {}
+                  const humanBalance = ethers.formatUnits(balance, decimals);
+                  foundTokens.push(
+                    `  📦 ${parseFloat(humanBalance).toFixed(2)} ${sym}`
+                  );
+
+                  if (selector) {
+                    const opt = document.createElement("option");
+                    opt.value = contractAddr;
+                    opt.setAttribute("data-decimals", decimals);
+                    opt.innerText = `${sym} (${parseFloat(humanBalance).toFixed(
+                      2
+                    )})`;
+                    selector.appendChild(opt);
+                  }
+                }
+              }
+            } catch (err) {}
+          }
+
+          if (foundTokens.length > 0) {
+            htmlReport += `<div style="margin-top:6px; font-weight:600; color:var(--text-color);">Tokens:</div>`;
+            foundTokens.forEach((t) => (htmlReport += `${t}<br>`));
+          } else {
+            htmlReport += `<br>📦 ERC-20 Tokens: None detected`;
+          }
+
+          if (foundNfts.length > 0) {
+            htmlReport += `<div style="margin-top:6px; font-weight:600; color:var(--text-color);">Collectibles:</div>`;
+            foundNfts.forEach((n) => (htmlReport += `${n}<br>`));
+          } else {
+            htmlReport += `<br>🖼️ Digital Collectibles: 0 NFTs`;
+          }
+
+          panel.innerHTML = htmlReport;
+        } catch (err) {
+          panel.innerHTML = `⚡ ETH Balance: 0.0000 ETH <br>❌ Indexer exception caught scanning state loops.`;
+        }
+      }
+
+      async function dispatchTBAAction(event, tbaAddress) {
+        event.stopPropagation();
+        if (!signer)
+          return alert("Wallet must be connected to dispatch commands.");
+
+        const destInput = document
+          .getElementById(`send-to-${tbaAddress}`)
+          .value.trim();
+        const amtInput = document
+          .getElementById(`send-amount-${tbaAddress}`)
+          .value.trim();
+        const selection = document.getElementById(`asset-select-${tbaAddress}`);
+        const actionBtn = document.getElementById(`send-btn-${tbaAddress}`);
+
+        if (!ethers.isAddress(destInput))
+          return alert("Target destination is an invalid Ethereum hex string.");
+        if (!amtInput || isNaN(amtInput) || parseFloat(amtInput) <= 0)
+          return alert("Provide a valid numeric transfer value asset size.");
+
+        try {
+          actionBtn.disabled = true;
+          actionBtn.innerText = "Sending...";
+
+          // standard ERC-6551 generic execution method ABI signature binding
+          const tbaContract = new ethers.Contract(
+            tbaAddress,
+            [
+              "function execute(address to, uint256 value, bytes data, uint8 operation) payable returns (bytes)",
+            ],
+            signer
+          );
+
+          let targetToAddress = destInput;
+          let transactionValueWei = 0n;
+          let operationalCalldata = "0x";
+
+          if (selection.value === "ETH") {
+            transactionValueWei = ethers.parseEther(amtInput);
+          } else {
+            // ERC-20 routing loop parameters
+            const erc20Address = selection.value;
+            const decimalsAttr =
+              selection.options[selection.selectedIndex].getAttribute(
+                "data-decimals"
+              ) || "18";
+            const computedTokenUnits = ethers.parseUnits(
+              amtInput,
+              parseInt(decimalsAttr)
+            );
+
+            const erc20Interface = new ethers.Interface([
+              "function transfer(address,uint256)",
+            ]);
+            operationalCalldata = erc20Interface.encodeFunctionData(
+              "transfer",
+              [destInput, computedTokenUnits]
+            );
+            targetToAddress = erc20Address;
+          }
+
+          // Operation: 0 corresponds to normal transaction CALL sequence routines
+          const tx = await tbaContract.execute(
+            targetToAddress,
+            transactionValueWei,
+            operationalCalldata,
+            0
+          );
+          alert(`Transaction submitted to Sepolia network. Hash: ${tx.hash}`);
+
+          await tx.wait();
+          alert("Assets dispatched from TBA wallet index.");
+
+          document.getElementById(`send-to-${tbaAddress}`).value = "";
+          document.getElementById(`send-amount-${tbaAddress}`).value = "";
+          queryTBAOnChainHoldings(tbaAddress);
+        } catch (err) {
+          console.error(err);
+          alert("Execution rejected or execution criteria unmet.");
+        } finally {
+          actionBtn.disabled = false;
+          actionBtn.innerText = "Transfer";
+        }
+      }
+
+      function executeVaultClipboardCopy(elementRef, encodedPayload) {
+        try {
+          const rawTargetString = atob(encodedPayload);
+          if (!rawTargetString || rawTargetString.trim() === "") {
+            alert("No configured layers detected to copy.");
+            return;
+          }
+          navigator.clipboard.writeText(rawTargetString).then(() => {
+            const cachedText = elementRef.innerText;
+            elementRef.innerText = "Saved!";
+            elementRef.style.color = "var(--accent-color)";
+            setTimeout(() => {
+              elementRef.innerText = cachedText;
+              elementRef.style.color = "";
+            }, 1200);
+          });
+        } catch (err) {
+          alert("Clipboard access blocked.");
+        }
+      }
+
+      function executeInlineCopy(event, elementRef, encodedPayload) {
+        event.stopPropagation();
+        try {
+          const rawPayload = atob(encodedPayload);
+          if (!rawPayload || rawPayload.trim() === "") {
+            alert(
+              "This specific asset does not have that trait slot configured."
+            );
+            return;
+          }
+          navigator.clipboard.writeText(rawPayload).then(() => {
+            const cachedText = elementRef.innerText;
+            elementRef.innerText = "Copied!";
+            elementRef.style.borderColor = "var(--accent-color)";
+            setTimeout(() => {
+              elementRef.innerText = cachedText;
+              elementRef.style.borderColor = "";
+            }, 1200);
+          });
+        } catch (err) {
+          alert("Clipboard access blocked.");
+        }
+      }
+
+      function executeTextCopy(elementRef, rawText) {
+        navigator.clipboard.writeText(rawText).then(() => {
+          const nestedSpan = elementRef.querySelector("span:last-child");
+          const originalText = nestedSpan.innerText;
+          nestedSpan.innerText = "COPIED!";
+          nestedSpan.style.color = "var(--accent-color)";
+          setTimeout(() => {
+            nestedSpan.innerText = originalText;
+            nestedSpan.style.color = "";
+          }, 1200);
+        });
+      }
+
+      window.onload = init;
+    </script>
+  </body>
+</html>
