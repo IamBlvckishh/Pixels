@@ -2141,7 +2141,7 @@
              <div class="detail-row">
                 <div class="detail-label">TBA Inventory Assets</div>
                 <div class="tba-assets-panel" id="assets-panel-${tbaWalletAddress}">
-                   Scanning Sepolia ledger states...
+                   Scanning ledger states...
                 </div>
              </div>
              <div class="detail-row">
@@ -2353,7 +2353,7 @@
             operationalCalldata,
             0
           );
-          alert(`Transaction submitted to Sepolia network. Hash: ${tx.hash}`);
+          alert(`Transaction submitted. Hash: ${tx.hash}`);
 
           await tx.wait();
           alert("Assets dispatched from TBA wallet index.");
