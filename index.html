@@ -490,6 +490,16 @@
         Clear Settings
       </button>
 
+      <button id="randomizeBtn" onclick="randomizeSettings()" style="
+                  border-style: dashed;
+                  width: 100%;
+                  font-weight: 600;
+                  color: var(--accent-color);
+                  margin-bottom: 16px;
+                ">
+        Randomize
+      </button>
+
       <div class="trait-group">
         <div class="section-title">1. Base Archetype</div>
         <div class="grid-options">
@@ -668,6 +678,43 @@
 
     let currentThemeIdx = 0;
     const GRID_SIZE = 16;
+
+    function randomizeSettings() {
+      // 1. Random Base
+      const bases = ['none', 'human', 'cat', 'frog', 'dog', 'robot'];
+      const randomBase = bases[Math.floor(Math.random() * bases.length)];
+      if (typeof setBaseModel === 'function') {
+        setBaseModel(randomBase);
+      }
+
+      // 2. Random Skin Palette
+      const skinSwatches = document.querySelectorAll('#skinPalette .color-swatch');
+      if (skinSwatches.length > 0) {
+        const randomSkinIdx = Math.floor(Math.random() * skinSwatches.length);
+        skinSwatches[randomSkinIdx].click();
+      }
+
+      // 3. Random Add-on Traits
+      const headwear = document.getElementById('traitHead');
+      if (headwear && headwear.options.length > 0) {
+        headwear.selectedIndex = Math.floor(Math.random() * headwear.options.length);
+      }
+
+      const eyes = document.getElementById('traitEyes');
+      if (eyes && eyes.options.length > 0) {
+        eyes.selectedIndex = Math.floor(Math.random() * eyes.options.length);
+      }
+
+      const mouth = document.getElementById('traitMouth');
+      if (mouth && mouth.options.length > 0) {
+        mouth.selectedIndex = Math.floor(Math.random() * mouth.options.length);
+      }
+
+      // Apply the selected traits
+      if (typeof applyTraits === 'function') {
+        applyTraits();
+      }
+    }
 
     const BASE_MODELS = {
       none: { outline: [], fill: [], features: {} },
